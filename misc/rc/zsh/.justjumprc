@@ -1,0 +1,22 @@
+func_justjump () {
+    if [ $# -eq 0 ]; then
+        # No arguments passed, use shelloutput with a temporary file to provide a jump
+        TMPFILE=$(mktemp)
+        trap 'rm -f $TMPFILE' EXIT
+        if justjump --shelloutput $TMPFILE; then 
+            if [ -e "$TMPFILE" ]; then
+                JMPCMD=$(cat $TMPFILE)
+                fc -R $TMPFILE
+                eval "$JMPCMD"
+            else
+                echo "Error extracting command"
+            fi
+        else
+            return 1
+        fi
+    else
+        # Arguments passed, run justjump with the provided arguments
+        justjump "$@"
+    fi
+}
+alias jj='func_justjump'
