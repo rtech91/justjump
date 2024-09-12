@@ -7,10 +7,13 @@ import (
 	"github.com/rtech91/justjump/pkg/config/global"
 	"github.com/rtech91/justjump/pkg/config/local"
 	"github.com/rtech91/justjump/pkg/util"
+	promptui_global "github.com/rtech91/justjump/pkg/util/promptui/global"
+	promtui_local "github.com/rtech91/justjump/pkg/util/promptui/local"
 	"github.com/spf13/cobra"
 )
 
 var shellOutput string = ""
+var globalJump bool = false
 
 var rootCmd = &cobra.Command{
 	Use:   "justjump",
@@ -19,13 +22,50 @@ var rootCmd = &cobra.Command{
 To use it simply run 'jj' in your terminal and select the directory you want to jump to.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if shellOutput != "" {
-			performJump(shellOutput)
+
+			if globalJump {
+				performGlobalJump(shellOutput)
+				return
+			}
+
+			performLocalJump(shellOutput)
 			return
 		}
 	},
 }
 
-func performJump(tmpFilePath string) {
+func performGlobalJump(tmpFilePath string) {
+	globalConfig, err := global.New()
+	if err != nil {
+		fmt.Printf("%v\n", err)
+		os.Exit(1)
+	}
+
+	jumpRoots := globalConfig.JumpRoots()
+	if len(jumpRoots) == 0 {
+		fmt.Println("No jump roots found")
+		os.Exit(1)
+	}
+
+	jumpRootPaths := util.BuildJumpRootPaths(jumpRoots)
+
+	prompt := promptui_global.PromptSelector(jumpRootPaths)
+
+	i, _, err := prompt.Run()
+	if err != nil {
+		fmt.Printf("Prompt failed %v\n", err)
+		os.Exit(1)
+	}
+
+	// open tmpFilePath and write the selected jump root with command
+	err = util.EchoCommand(tmpFilePath, jumpRootPaths[i]["fullPath"])
+	if err != nil {
+		fmt.Printf("%v\n", err)
+		os.Exit(1)
+	}
+}
+
+func performLocalJump(tmpFilePath string) {
 	globalConfig, err := global.New()
 	if err != nil {
 		fmt.Printf("%v\n", err)
@@ -56,7 +96,7 @@ func performJump(tmpFilePath string) {
 
 		jumpPointPaths := util.BuildJumpPointPaths(jumpRoot, jumpPoints)
 
-		prompt := util.PromptSelector(jumpPointPaths)
+		prompt := promtui_local.PromptSelector(jumpPointPaths)
 
 		i, _, err := prompt.Run()
 		if err != nil {
@@ -83,4 +123,6 @@ func Execute() {
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&shellOutput, "shelloutput", "s", "", "Output the shell command to a temporary file")
 	rootCmd.PersistentFlags().MarkHidden("shelloutput")
+
+	rootCmd.PersistentFlags().BoolVarP(&globalJump, "global", "G", false, "Perform a global jump accross registered projects")
 }

@@ -21,6 +21,21 @@ func DetermineJumpRoot(currentDir string, jumpRoots global.JumpRoots) (bool, str
 	return exist, jumpRoot
 }
 
+func BuildJumpRootPaths(jumpRoots global.JumpRoots) []map[string]string {
+	jumpRootPaths := make([]map[string]string, 0)
+
+	for name, jr := range jumpRoots {
+		dict := map[string]string{
+			"jumpRoot": name,
+			"fullPath": jr.Root,
+		}
+
+		jumpRootPaths = append(jumpRootPaths, dict)
+	}
+
+	return jumpRootPaths
+}
+
 func BuildJumpPointPaths(jumpRoot string, jumpPoints []string) []map[string]string {
 	jumpPointPaths := make([]map[string]string, 0)
 	jumpPointPaths = append(jumpPointPaths, map[string]string{
