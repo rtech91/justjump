@@ -1,4 +1,4 @@
-package util
+package local
 
 import (
 	"strings"
@@ -6,7 +6,7 @@ import (
 	"github.com/manifoldco/promptui"
 )
 
-func PromptSearcher(input string, index int, jumpPointPaths []map[string]string) bool {
+func promptSearcher(input string, index int, jumpPointPaths []map[string]string) bool {
 	jumpPoint := jumpPointPaths[index]
 	name := strings.Replace(strings.ToLower(jumpPoint["jumpPoint"]), " ", "", -1)
 	input = strings.Replace(strings.ToLower(input), " ", "", -1)
@@ -14,7 +14,7 @@ func PromptSearcher(input string, index int, jumpPointPaths []map[string]string)
 	return strings.Contains(name, input)
 }
 
-func PromptTemplates() *promptui.SelectTemplates {
+func promptTemplates() *promptui.SelectTemplates {
 	return &promptui.SelectTemplates{
 		Label:    "{{ . }}?",
 		Active:   "\U0001F449 {{ .jumpPoint | cyan }} ({{ .fullPath | faint }})",
@@ -27,9 +27,9 @@ func PromptSelector(jumpPointPaths []map[string]string) *promptui.Select {
 	return &promptui.Select{
 		Label:     "Select a jump point",
 		Items:     jumpPointPaths,
-		Templates: PromptTemplates(),
+		Templates: promptTemplates(),
 		Searcher: func(input string, index int) bool {
-			return PromptSearcher(input, index, jumpPointPaths)
+			return promptSearcher(input, index, jumpPointPaths)
 		},
 	}
 }

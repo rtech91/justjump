@@ -55,10 +55,9 @@ To use JustJump, simply run `jj` in your terminal and select the directory you w
 jj
 ```
 
-You can also pass arguments to `justjump` or `jj`. For now only `--help` flag is supported.
-```sh
-jj --help
-```
+You can also pass arguments to `justjump` or `jj`.
+- `--help`: Display help information
+- `--global` or `-G`: Perform a global jump across registered projects
 
 ## Configuration
 
