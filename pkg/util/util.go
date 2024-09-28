@@ -2,6 +2,7 @@ package util
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 
@@ -25,6 +26,12 @@ func BuildJumpRootPaths(jumpRoots global.JumpRoots) []map[string]string {
 	jumpRootPaths := make([]map[string]string, 0)
 
 	for name, jr := range jumpRoots {
+
+		if _, err := os.Stat(jr.Root); os.IsNotExist(err) {
+			fmt.Printf("Can't add jump root to the list %s as it does not exist\n", jr.Root)
+			continue
+		}
+
 		dict := map[string]string{
 			"jumpRoot": name,
 			"fullPath": jr.Root,
@@ -43,6 +50,13 @@ func BuildJumpPointPaths(jumpRoot string, jumpPoints []string) []map[string]stri
 		"fullPath":  jumpRoot,
 	})
 	for _, jumpPoint := range jumpPoints {
+		var fullPath string = jumpRoot + "/" + jumpPoint
+
+		if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+			fmt.Printf("Can't add jump point to the list %s as it does not exist\n", fullPath)
+			continue
+		}
+
 		dict := map[string]string{
 			"jumpPoint": jumpPoint,
 			"fullPath":  jumpRoot + "/" + jumpPoint,
