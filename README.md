@@ -59,6 +59,20 @@ You can also pass arguments to `justjump` or `jj`.
 - `--help`: Display help information
 - `--global` or `-G`: Perform a global jump across registered projects
 
+### Verify Command
+
+The `verify` command checks if the local or global folders exist.
+
+To verify local folders, run:
+```sh
+jj verify
+```
+
+To verify global folders, run:
+```sh
+jj verify --global
+```
+
 ## Configuration
 
 JustJump uses a few configuration files to manage jump points and settings.
