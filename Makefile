@@ -12,6 +12,9 @@ endif
 build:
 	go build -o $(BINARY_NAME) ./cmd/main.go
 
+build-release:
+	go build -o $(BINARY_NAME) -ldflags="-s -w" ./cmd/main.go
+
 install:
 	sudo cp $(BINARY_NAME) $(INSTALL_DIR)/$(BINARY_NAME)
 

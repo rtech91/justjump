@@ -19,7 +19,9 @@ var rootCmd = &cobra.Command{
 	Use:   "justjump",
 	Short: "JustJump is a simple tool to help you jump between directories quickly.",
 	Long: `JustJump is a simple tool to help you jump between directories quickly.
-To use it simply run 'jj' in your terminal and select the directory you want to jump to.`,
+To use it simply run 'jj' in your terminal and select the directory you want to jump to.
+
+The --global or -G flag can be used not only to perform jumps across projects, but also as a modifier for other commands like add, verify, or remove.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if shellOutput != "" {
 
@@ -110,6 +112,9 @@ func performLocalJump(tmpFilePath string) {
 			fmt.Printf("%v\n", err)
 			os.Exit(1)
 		}
+	} else {
+		fmt.Println("Can't determine jump root for current directory")
+		fmt.Println("Please run 'jj add -G' to add a global jump root.")
 	}
 }
 
@@ -124,5 +129,5 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&shellOutput, "shelloutput", "s", "", "Output the shell command to a temporary file")
 	rootCmd.PersistentFlags().MarkHidden("shelloutput")
 
-	rootCmd.PersistentFlags().BoolVarP(&globalJump, "global", "G", false, "Perform a global jump accross registered projects")
+	rootCmd.PersistentFlags().BoolVarP(&globalJump, "global", "G", false, "Perform a global jump across registered projects or use as a modifier for other commands like add, verify, or remove")
 }

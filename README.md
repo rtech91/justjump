@@ -15,7 +15,7 @@ JustJump is a simple tool to help you jump between directories quickly.
 ## Requirements
 
 JustJump requires the following dependencies to be installed on your system:
-- [Go](https://golang.org/dl/) (version 1.22 or higher)
+- [Go](https://golang.org/dl/)
 - [Git](https://git-scm.com/downloads) (optional)
 - [Make](https://www.gnu.org/software/make/)
 
@@ -28,6 +28,7 @@ make build
 make install
 ```
 This will build the binary and install it to `/usr/local/bin/` directory.
+Installation may require root privileges, so you may need to use `sudo` if you encounter permission issues.
 
 To uninstall JustJump, run the following command:
 
@@ -59,6 +60,42 @@ You can also pass arguments to `justjump` or `jj`.
 - `--help`: Display help information
 - `--global` or `-G`: Perform a global jump across registered projects
 
+### Add Command
+
+The `add` command allows you to register a directory as a jump root.
+
+To add a local jump root for the current directory:
+```sh
+jj add
+```
+
+To add a global jump root for the current directory:
+```sh
+jj add --global
+```
+or
+```sh
+jj add -G
+```
+
+### Remove Command
+
+The `remove` command allows you to unregister a directory as a jump root.
+
+To remove a local jump root for the current directory:
+```sh
+jj remove
+```
+
+To remove a global jump root for the current directory:
+```sh
+jj remove --global
+```
+or
+```sh
+jj remove -G
+```
+
 ### Verify Command
 
 The `verify` command checks if the local or global folders exist.
@@ -73,22 +110,33 @@ To verify global folders, run:
 jj verify --global
 ```
 
+or 
+```sh
+jj verify -G
+```
+
 ## Configuration
 
 JustJump uses a few configuration files to manage jump points and settings.
 
-### registry.yaml
+### Global Jump Root Registry
 
-This file contains the root directory for you jump points.
-
-Example:
-```yaml
-yourproject:
-    jumproot: /path/to/yourproject
+The global jump root registry is managed as a drop-in directory located at:
+```sh
+~/.config/justjump/jumproots.d/
 ```
 
-See and use example in the misc/config/global directory.
-Don't forget to copy the `.justjump/` folder with the `registry.yaml` file to your home directory.
+Each global jump root is represented as a file with the `.jpath` extension. The file name corresponds to the jump root name, and the file content contains the absolute path to the directory.
+
+To manually add a global jump root, create a file in the `jumproots.d` directory:
+```sh
+echo "/absolute/path/to/directory" > ~/.config/justjump/jumproots.d/yourproject.jpath
+```
+
+To remove a global jump root, delete the corresponding `.jpath` file:
+```sh
+rm ~/.config/justjump/jumproots.d/yourproject.jpath
+```
 
 ### .justjump.yaml
 
