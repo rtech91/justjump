@@ -2,8 +2,8 @@ package local
 
 import (
 	"errors"
-	"log"
 	"os"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -87,7 +87,6 @@ func (c *localConfig) Load() error {
 
 func (c *localConfig) Save() error {
 	data, err := yaml.Marshal(c.jumpPoints)
-	log.Println(c.jumpPoints)
 	if err != nil {
 		return err
 	}
@@ -105,22 +104,51 @@ func (c *localConfig) JumpPoints() []string {
 }
 
 func (c *localConfig) AddJumpPoint(rpath string) error {
-	// check that path ends with a slash or is a directory
+	// Ensure the path ends with a slash
 	if rpath[len(rpath)-1] != '/' {
 		rpath += "/"
-		if err := c.CheckLocalPathExist(rpath); err != nil {
-			return err
+	}
+
+	// Check if the relative path exists within the jump root
+	if err := c.CheckLocalPathExist(rpath); err != nil {
+		return err
+	}
+
+	// Avoid adding the relative path if it already exists in the configuration
+	for _, existingPath := range c.jumpPoints.Paths {
+		if existingPath == rpath {
+			return errors.New("jump point already exists")
 		}
 	}
 
+	// Add the relative path to the list
 	c.jumpPoints.Paths = append(c.jumpPoints.Paths, rpath)
+
+	// Save the updated configuration
+	err := c.Save()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (c *localConfig) RemoveJumpPoint(path string) error {
-	for i, p := range c.jumpPoints.Paths {
-		if p == path {
+	if path[len(path)-1] != '/' {
+		path += "/"
+	}
+
+	for i, relPath := range c.jumpPoints.Paths {
+		// Check if the relative path is a substring of the absolute path
+		if strings.Contains(path, relPath) {
 			c.jumpPoints.Paths = append(c.jumpPoints.Paths[:i], c.jumpPoints.Paths[i+1:]...)
+
+			// Save the updated configuration
+			err := c.Save()
+			if err != nil {
+				return err
+			}
+
 			return nil
 		}
 	}
@@ -129,7 +157,7 @@ func (c *localConfig) RemoveJumpPoint(path string) error {
 }
 
 func (c *localConfig) CheckLocalPathExist(rpath string) error {
-	rpathstat, err := os.Stat(c.jumpRoot + rpath)
+	rpathstat, err := os.Stat(c.jumpRoot + "/" + rpath)
 	if os.IsNotExist(err) || !rpathstat.IsDir() {
 		return ErrRelPathNotExist
 	}
