@@ -1,0 +1,117 @@
+name: Build and Release JustJump
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build for Linux and macOS
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            build_command: make build-release-linux
+          - os: macos-latest
+            build_command: make build-release-darwin
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Ensure full commit history and tags are fetched
+
+      - name: Get Latest Tag
+        id: get_tag
+        run: |
+          tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
+          echo "tag=$tag" >> $GITHUB_ENV
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.24.3
+
+      - name: Build JustJump
+        run: ${{ matrix.build_command }}
+
+      - name: Archive artifact
+        run: |
+          tar -czf justjump-${{ matrix.os }}-v${{ env.tag }}.tar.gz justjump misc/rc
+        working-directory: ${{ github.workspace }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: justjump-${{ matrix.os }}
+          path: justjump-${{ matrix.os }}-v${{ env.tag }}.tar.gz
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: build
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Add token for authentication
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Ensure full commit history and tags are fetched
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: justjump-ubuntu-latest
+          path: ./artifacts/ubuntu
+
+      - name: Download macOS artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: justjump-macos-latest
+          path: ./artifacts/macos
+
+      - name: Get Latest Tag
+        id: get_tag
+        run: |
+          tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
+          echo "tag=$tag" >> $GITHUB_ENV
+
+      - name: Generate Changelog
+        id: changelog
+        run: |
+          echo "## Changelog" > CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          git log --pretty=format:"- %s (%h)" $(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")..HEAD >> CHANGELOG.md
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ env.tag }}
+          release_name: "JustJump v${{ env.tag }}"
+          body_path: CHANGELOG.md
+          draft: false
+          prerelease: false
+
+      - name: Upload Linux Artifact
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./artifacts/ubuntu/justjump-ubuntu-latest-v${{ env.tag }}.tar.gz
+          asset_name: justjump-ubuntu-latest-v${{ env.tag }}.tar.gz
+          asset_content_type: application/gzip
+
+      - name: Upload macOS Artifact
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./artifacts/macos/justjump-macos-latest-v${{ env.tag }}.tar.gz
+          asset_name: justjump-macos-latest-v${{ env.tag }}.tar.gz
+          asset_content_type: application/gzip
