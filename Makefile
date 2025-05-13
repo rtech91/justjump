@@ -15,6 +15,12 @@ build:
 build-release:
 	go build -o $(BINARY_NAME) -ldflags="-s -w" ./cmd/main.go
 
+build-release-linux:
+	GOOS=linux GOARCH=amd64 go build -o $(BINARY_NAME) -ldflags="-s -w" ./cmd/main.go
+
+build-release-darwin:
+	GOOS=darwin GOARCH=amd64 go build -o $(BINARY_NAME) -ldflags="-s -w" ./cmd/main.go
+
 install:
 	sudo cp $(BINARY_NAME) $(INSTALL_DIR)/$(BINARY_NAME)
 
@@ -25,4 +31,4 @@ clean:
 	go clean
 	rm -f $(BINARY_NAME)
 
-.PHONY: build clean install remove
+.PHONY: build clean install remove build-release-linux build-release-darwin

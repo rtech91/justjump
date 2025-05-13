@@ -3,8 +3,6 @@ name: Build and Release JustJump
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 permissions:
   contents: write
@@ -88,8 +86,15 @@ jobs:
         run: |
           echo "## Changelog" > CHANGELOG.md
           echo "" >> CHANGELOG.md
-          git log --pretty=format:"- %s (%h)" $(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")..HEAD >> CHANGELOG.md
-
+          tags=$(git tag --sort=-creatordate)
+          latest_tag=$(echo "$tags" | head -n 1)
+          previous_tag=$(echo "$tags" | sed -n 2p)
+          if [ -z "$previous_tag" ]; then
+            git log --pretty=format:"- %s (%h)" $latest_tag | grep -E "(feat|fix):" | sed -E 's/(feat|fix): //' >> CHANGELOG.md
+          else
+            git log --pretty=format:"- %s (%h)" $previous_tag..$latest_tag | grep -E "(feat|fix):" | sed -E 's/(feat|fix): //' >> CHANGELOG.md
+          fi
+          
       - name: Create GitHub Release
         id: create_release
         uses: actions/create-release@v1
