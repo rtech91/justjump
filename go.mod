@@ -1,6 +1,6 @@
 module github.com/rtech91/justjump
 
-go 1.24.3
+go 1.24
 
 require (
 	github.com/manifoldco/promptui v0.9.0

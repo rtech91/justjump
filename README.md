@@ -24,11 +24,17 @@ JustJump requires the following dependencies to be installed on your system:
 To install JustJump, you can use the provided Makefile. Run the following commands:
 
 ```sh
-make build
+make build-release
 make install
 ```
 This will build the binary and install it to `/usr/local/bin/` directory.
 Installation may require root privileges, so you may need to use `sudo` if you encounter permission issues.
+
+**Alternatively, you can install JustJump directly using Go:**
+
+```sh
+GOBIN=/usr/local/bin go install github.com/rtech91/justjump@latest
+```
 
 To uninstall JustJump, run the following command:
 
@@ -40,10 +46,20 @@ make remove
 
 **`Important note: The shell integration is necessary to use JustJump in your shell properly.`**
 
-To integrate JustJump with your shell, you can add the following function to your shell configuration file (e.g. `~/.bashrc`, `~/.zshrc`).
+To integrate JustJump with your shell, add the following line to your shell configuration file (e.g. `~/.bashrc`, `~/.zshrc`):
 
 ```sh
 [ -f ~/.justjumprc ] && source ~/.justjumprc
+```
+
+You can automatically add this line to your shell config by running:
+
+```sh
+if [ -n "$ZSH_VERSION" ]; then
+  echo '[ -f ~/.justjumprc ] && source ~/.justjumprc' >> ~/.zshrc
+elif [ -n "$BASH_VERSION" ]; then
+  echo '[ -f ~/.justjumprc ] && source ~/.justjumprc' >> ~/.bashrc
+fi
 ```
 
 Then copy the `.justjumprc` file to your home directory.
