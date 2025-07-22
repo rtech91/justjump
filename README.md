@@ -21,16 +21,32 @@ JustJump requires the following dependencies to be installed on your system:
 
 ## Installation
 
-To install JustJump, you can use the provided Makefile. Run the following commands:
+
+### 1. Recommended: Install with the official script
+
+For most users, run this command (no need to download the source):
+
+```bash
+curl -sSf https://raw.githubusercontent.com/rtech91/justjump/main/install.sh | bash
+```
+
+This will:
+- Download and install JustJump to `/usr/local/bin`
+- Set up shell integration for Bash or Zsh automatically
+
+---
+
+### 2. Advanced: Build from source (if you downloaded the source code)
+
+If you have cloned or downloaded the source code, you can build and install manually:
 
 ```sh
 make build-release
 make install
 ```
-This will build the binary and install it to `/usr/local/bin/` directory.
-Installation may require root privileges, so you may need to use `sudo` if you encounter permission issues.
+This will build the binary and install it to `/usr/local/bin/`. You may need `sudo` for permissions.
 
-**Alternatively, you can install JustJump directly using Go:**
+Alternatively, you can install JustJump directly using Go:
 
 ```sh
 GOBIN=/usr/local/bin go install github.com/rtech91/justjump@latest
