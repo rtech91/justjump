@@ -15,7 +15,13 @@ if ! command -v go &>/dev/null; then
 fi
 
 echo "Installing JustJump from git..."
-GOBIN=/usr/local/bin go install github.com/rtech91/justjump@latest
+INSTALL_BIN="$HOME/.local/bin"
+mkdir -p "$INSTALL_BIN"
+GOBIN="$INSTALL_BIN" go install github.com/rtech91/justjump@latest
+if ! echo "$PATH" | grep -q "$INSTALL_BIN"; then
+    echo "Warning: $INSTALL_BIN is not in your PATH. Add the following line to your shell profile to use 'jj':"
+    echo "export PATH=\"$INSTALL_BIN:\$PATH\""
+fi
 
 # Detect shell and download the corresponding .justjumprc file
 detect_shell() {
