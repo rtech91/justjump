@@ -4,7 +4,7 @@ title: JustJump
 
 # JustJump
 
-A minimal, blazing-fast directory jumper for your shell. Effortlessly jump between frequently used directories with smart auto-completion and shell integration.
+A minimal, blazing-fast directory jumper for your shell. Effortlessly jump between frequently used directories with directory suggestions and shell integration.
 
 ## Features
 - Fast directory jumping
@@ -14,9 +14,8 @@ A minimal, blazing-fast directory jumper for your shell. Effortlessly jump betwe
 ## Installation
 
 ### Prerequisites
-- Go compiler installed
-- `curl` installed
-- Sudo/root access to write to `/usr/local/bin`
+- Go compiler (required)
+- `curl` (required)
 
 ### Install via script
 
@@ -27,16 +26,8 @@ Run the following command in your terminal:
 curl -sSf https://rtech91.github.io/justjump/install.sh | bash
 ```
 
-Or, clone the repo and run the script manually:
-
-```bash
-git clone https://github.com/rtech91/justjump.git
-cd justjump
-bash install.sh
-```
-
 This will:
-- Install the JustJump binary to `/usr/local/bin`
+- Install the JustJump binary to `~/.local/bin` folder
 - Download the appropriate shell integration file to `~/.justjumprc`
 - Add the integration line to your shell rc file (`.bashrc` or `.zshrc`)
 
