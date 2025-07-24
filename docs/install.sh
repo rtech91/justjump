@@ -40,11 +40,11 @@ detect_shell() {
 SHELL_NAME=$(detect_shell)
 if [ "$SHELL_NAME" = "bash" ]; then
     echo "Detected bash shell."
-    curl -sSf -o "$HOME/.justjumprc" https://raw.githubusercontent.com/rtech91/justjump/refs/heads/main/misc/rc/bash/.justjumprc
+    curl -sSf -o "$HOME/.justjumprc" https://raw.githubusercontent.com/rtech91/justjump/main/misc/rc/bash/.justjumprc
     RC_FILE="$HOME/.bashrc"
 elif [ "$SHELL_NAME" = "zsh" ]; then
     echo "Detected zsh shell."
-    curl -sSf -o "$HOME/.justjumprc" https://raw.githubusercontent.com/rtech91/justjump/refs/heads/main/misc/rc/zsh/.justjumprc
+    curl -sSf -o "$HOME/.justjumprc" https://raw.githubusercontent.com/rtech91/justjump/main/misc/rc/zsh/.justjumprc
     RC_FILE="$HOME/.zshrc"
 else
     echo "Could not reliably detect your shell (detected: '$SHELL_NAME')."
