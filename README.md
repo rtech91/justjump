@@ -24,14 +24,15 @@ JustJump requires the following dependencies to be installed on your system:
 
 ### 1. Recommended: Install with the official script
 
+
 For most users, run this command (no need to download the source):
 
 ```bash
-curl -sSf https://raw.githubusercontent.com/rtech91/justjump/main/install.sh | bash
+curl -sSf https://rtech91.github.io/justjump/install.sh | bash
 ```
 
 This will:
-- Download and install JustJump to `/usr/local/bin`
+- Download and install JustJump to `~/.local/bin` (no sudo required)
 - Set up shell integration for Bash or Zsh automatically
 
 ---
@@ -44,12 +45,13 @@ If you have cloned or downloaded the source code, you can build and install manu
 make build-release
 make install
 ```
-This will build the binary and install it to `/usr/local/bin/`. You may need `sudo` for permissions.
+
+This will build the binary and install it to `~/.local/bin`. You do not need sudo for this location.
 
 Alternatively, you can install JustJump directly using Go:
 
 ```sh
-GOBIN=/usr/local/bin go install github.com/rtech91/justjump@latest
+GOBIN=$HOME/.local/bin go install github.com/rtech91/justjump@latest
 ```
 
 To uninstall JustJump, run the following command:
