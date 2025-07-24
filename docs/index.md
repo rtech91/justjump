@@ -4,7 +4,7 @@ title: JustJump
 
 # JustJump
 
-A minimal, blazing-fast directory jumper for your shell. Effortlessly jump between frequently used directories with directory suggestions and shell integration.
+A minimal, blazing-fast directory jumper for your shell. Effortlessly jump between frequently used directories with predefined suggestions and shell integration.
 
 ## Features
 - Fast directory jumping
@@ -19,7 +19,6 @@ A minimal, blazing-fast directory jumper for your shell. Effortlessly jump betwe
 
 ### Install via script
 
-
 Run the following command in your terminal:
 
 ```bash
@@ -29,7 +28,7 @@ curl -sSf https://rtech91.github.io/justjump/install.sh | bash
 This will:
 - Install the JustJump binary to `~/.local/bin` folder
 - Download the appropriate shell integration file to `~/.justjumprc`
-- Add the integration line to your shell rc file (`.bashrc` or `.zshrc`)
+- Add the integration line to your shell configuration file (`.bashrc` or `.zshrc`).
 
 ## Usage
 
@@ -39,10 +38,15 @@ After installation, reload your shell:
 source ~/.bashrc   # or source ~/.zshrc
 ```
 
-Jump to a directory:
+To jump to a directory:
 
 ```bash
-jj <directory>
+jj
+```
+or
+
+```bash
+jj -G
 ```
 
 For more details, see the [README](https://github.com/rtech91/justjump).
