@@ -48,12 +48,6 @@ make install
 
 This will build the binary and install it to `~/.local/bin`. You do not need sudo for this location.
 
-Alternatively, you can install JustJump directly using Go:
-
-```sh
-GOBIN=$HOME/.local/bin go install github.com/rtech91/justjump@latest
-```
-
 To uninstall JustJump, run the following command:
 
 ```sh
