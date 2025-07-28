@@ -9,8 +9,7 @@ JustJump is a simple tool to help you jump between directories quickly.
 - [Shell integration](#shell-integration)
 - [Usage](#usage)
 - [Configuration](#configuration)
-- [Contributing](#contributing)
-- [License](#license)
+- [DDEV Integration](#ddev-integration)
 
 ## Requirements
 
@@ -20,6 +19,9 @@ JustJump requires the following dependencies to be installed on your system:
 - [Make](https://www.gnu.org/software/make/)
 
 ## Installation
+
+### DDEV Integration
+If you are using DDEV, see [DDEV Integration instructions](./DDEV_INTEGRATION.md) for container setup.
 
 
 ### 1. Recommended: Install with the official script
