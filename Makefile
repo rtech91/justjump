@@ -1,5 +1,5 @@
 BINARY_NAME=justjump
-INSTALL_DIR=/usr/local/bin
+INSTALL_DIR=$(HOME)/.local/bin
 
 build:
 	go build -o $(BINARY_NAME) main.go
@@ -8,6 +8,7 @@ build-release:
 	go build -o $(BINARY_NAME) -ldflags="-s -w" main.go
 
 install:
+	mkdir -p $(INSTALL_DIR)
 	cp $(BINARY_NAME) $(INSTALL_DIR)/$(BINARY_NAME)
 
 remove:
