@@ -3,7 +3,10 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
+
+	"github.com/manifoldco/promptui"
 	"github.com/rtech91/justjump/pkg/config/global"
 	"github.com/rtech91/justjump/pkg/config/local"
 	"github.com/rtech91/justjump/pkg/util"
@@ -22,21 +25,22 @@ var rootCmd = &cobra.Command{
 To use it simply run 'jj' in your terminal and select the directory you want to jump to.
 
 The --global or -G flag can be used not only to perform jumps across projects, but also as a modifier for other commands like add, verify, or remove.`,
+	Args: cobra.ArbitraryArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		if shellOutput != "" {
 
 			if globalJump {
-				performGlobalJump(shellOutput)
+				performGlobalJump(shellOutput, args)
 				return
 			}
 
-			performLocalJump(shellOutput)
+			performLocalJump(shellOutput, args)
 			return
 		}
 	},
 }
 
-func performGlobalJump(tmpFilePath string) {
+func performGlobalJump(tmpFilePath string, args []string) {
 	globalConfig, err := global.New()
 	if err != nil {
 		fmt.Printf("%v\n", err)
@@ -49,25 +53,61 @@ func performGlobalJump(tmpFilePath string) {
 		os.Exit(1)
 	}
 
-	jumpRootPaths := util.BuildJumpRootPaths(jumpRoots)
+	allPaths := util.BuildJumpRootPaths(jumpRoots)
+	targetPaths := allPaths
 
-	prompt := promptui_global.PromptSelector(jumpRootPaths)
+	if len(args) > 0 {
+		searchTerm := strings.ToLower(args[0])
+		var filtered []map[string]string
+		for _, p := range allPaths {
+			if strings.Contains(strings.ToLower(p["jumpRoot"]), searchTerm) {
+				filtered = append(filtered, p)
+			}
+		}
+
+		if len(filtered) == 1 {
+			err = util.EchoCommand(tmpFilePath, filtered[0]["fullPath"])
+			if err != nil {
+				fmt.Printf("%v\n", err)
+				os.Exit(1)
+			}
+			return
+		}
+
+		if len(filtered) > 1 {
+			targetPaths = filtered
+		}
+	}
+
+	prompt := promptui_global.PromptSelector(targetPaths)
 
 	i, _, err := prompt.Run()
 	if err != nil {
-		fmt.Printf("Prompt failed %v\n", err)
-		os.Exit(1)
+		if (err == promptui.ErrInterrupt || err == promptui.ErrEOF) && len(targetPaths) < len(allPaths) {
+			prompt = promptui_global.PromptSelector(allPaths)
+			i, _, err = prompt.Run()
+			if err != nil {
+				os.Exit(0)
+			}
+			err = util.EchoCommand(tmpFilePath, allPaths[i]["fullPath"])
+			if err != nil {
+				fmt.Printf("%v\n", err)
+				os.Exit(1)
+			}
+			return
+		}
+		os.Exit(0)
 	}
 
 	// open tmpFilePath and write the selected jump root with command
-	err = util.EchoCommand(tmpFilePath, jumpRootPaths[i]["fullPath"])
+	err = util.EchoCommand(tmpFilePath, targetPaths[i]["fullPath"])
 	if err != nil {
 		fmt.Printf("%v\n", err)
 		os.Exit(1)
 	}
 }
 
-func performLocalJump(tmpFilePath string) {
+func performLocalJump(tmpFilePath string, args []string) {
 	globalConfig, err := global.New()
 	if err != nil {
 		fmt.Printf("%v\n", err)
@@ -96,18 +136,54 @@ func performLocalJump(tmpFilePath string) {
 			os.Exit(1)
 		}
 
-		jumpPointPaths := util.BuildJumpPointPaths(jumpRoot, jumpPoints)
+		allPaths := util.BuildJumpPointPaths(jumpRoot, jumpPoints)
+		targetPaths := allPaths
 
-		prompt := promtui_local.PromptSelector(jumpPointPaths)
+		if len(args) > 0 {
+			searchTerm := strings.ToLower(args[0])
+			var filtered []map[string]string
+			for _, p := range allPaths {
+				if strings.Contains(strings.ToLower(p["jumpPoint"]), searchTerm) {
+					filtered = append(filtered, p)
+				}
+			}
+
+			if len(filtered) == 1 {
+				err = util.EchoCommand(tmpFilePath, filtered[0]["fullPath"])
+				if err != nil {
+					fmt.Printf("%v\n", err)
+					os.Exit(1)
+				}
+				return
+			}
+
+			if len(filtered) > 1 {
+				targetPaths = filtered
+			}
+		}
+
+		prompt := promtui_local.PromptSelector(targetPaths)
 
 		i, _, err := prompt.Run()
 		if err != nil {
-			fmt.Printf("Prompt failed %v\n", err)
-			os.Exit(1)
+			if (err == promptui.ErrInterrupt || err == promptui.ErrEOF) && len(targetPaths) < len(allPaths) {
+				prompt = promtui_local.PromptSelector(allPaths)
+				i, _, err = prompt.Run()
+				if err != nil {
+					os.Exit(0)
+				}
+				err = util.EchoCommand(tmpFilePath, allPaths[i]["fullPath"])
+				if err != nil {
+					fmt.Printf("%v\n", err)
+					os.Exit(1)
+				}
+				return
+			}
+			os.Exit(0)
 		}
 
 		// open tmpFilePath and write the selected jump point with command
-		err = util.EchoCommand(tmpFilePath, jumpPointPaths[i]["fullPath"])
+		err = util.EchoCommand(tmpFilePath, targetPaths[i]["fullPath"])
 		if err != nil {
 			fmt.Printf("%v\n", err)
 			os.Exit(1)
