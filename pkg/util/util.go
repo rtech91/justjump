@@ -82,3 +82,26 @@ func EchoCommand(tmpFilePath string, chosenFullPath string) error {
 
 	return nil
 }
+
+// FuzzyMatch returns true if the characters in the search string
+// appear in the target string in the same order.
+func FuzzyMatch(search, target string) bool {
+	search = strings.ToLower(search)
+	target = strings.ToLower(target)
+
+	if search == "" {
+		return true
+	}
+
+	searchIdx := 0
+	for targetIdx := 0; targetIdx < len(target); targetIdx++ {
+		if target[targetIdx] == search[searchIdx] {
+			searchIdx++
+		}
+		if searchIdx == len(search) {
+			return true
+		}
+	}
+
+	return false
+}

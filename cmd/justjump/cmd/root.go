@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"strings"
+
 
 
 	"github.com/manifoldco/promptui"
@@ -57,10 +57,10 @@ func performGlobalJump(tmpFilePath string, args []string) {
 	targetPaths := allPaths
 
 	if len(args) > 0 {
-		searchTerm := strings.ToLower(args[0])
+		searchTerm := args[0]
 		var filtered []map[string]string
 		for _, p := range allPaths {
-			if strings.Contains(strings.ToLower(p["jumpRoot"]), searchTerm) {
+			if util.FuzzyMatch(searchTerm, p["jumpRoot"]) {
 				filtered = append(filtered, p)
 			}
 		}
@@ -140,10 +140,10 @@ func performLocalJump(tmpFilePath string, args []string) {
 		targetPaths := allPaths
 
 		if len(args) > 0 {
-			searchTerm := strings.ToLower(args[0])
+			searchTerm := args[0]
 			var filtered []map[string]string
 			for _, p := range allPaths {
-				if strings.Contains(strings.ToLower(p["jumpPoint"]), searchTerm) {
+				if util.FuzzyMatch(searchTerm, p["jumpPoint"]) {
 					filtered = append(filtered, p)
 				}
 			}
