@@ -1,9 +1,10 @@
 package util
 
 import (
-	"errors"
 	"fmt"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/rtech91/justjump/pkg/config/global"
@@ -69,15 +70,16 @@ func BuildJumpPointPaths(jumpRoot string, jumpPoints []string) []map[string]stri
 }
 
 func EchoCommand(tmpFilePath string, chosenFullPath string) error {
-	file, err := os.OpenFile(tmpFilePath, os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(tmpFilePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
-		return errors.New("failed to open the temporary file")
+		return fmt.Errorf("failed to open temporary file: %w", err)
 	}
+	defer file.Close()
 
 	// write the selected jump point with command
 	_, err = file.WriteString("cd " + chosenFullPath)
 	if err != nil {
-		return errors.New("failed to write to the temporary file")
+		return fmt.Errorf("failed to write to temporary file: %w", err)
 	}
 
 	return nil
@@ -85,10 +87,8 @@ func EchoCommand(tmpFilePath string, chosenFullPath string) error {
 
 // FuzzyMatch returns true if the characters in the search string
 // appear in the target string in the same order.
+// Both search and target must be pre-lowercased for best performance.
 func FuzzyMatch(search, target string) bool {
-	search = strings.ToLower(search)
-	target = strings.ToLower(target)
-
 	if search == "" {
 		return true
 	}
@@ -104,4 +104,31 @@ func FuzzyMatch(search, target string) bool {
 	}
 
 	return false
+}
+
+
+// GetGitWorktrees runs 'git worktree list' and returns the paths of all associated worktrees.
+func GetGitWorktrees() ([]map[string]string, error) {
+	worktrees := make([]map[string]string, 0)
+
+	// Run git worktree list --porcelain
+	cmd := exec.Command("git", "worktree", "list", "--porcelain")
+	output, err := cmd.Output()
+	if err != nil {
+		return nil, fmt.Errorf("not a git repository or git not found")
+	}
+
+	lines := strings.Split(string(output), "\n")
+	for _, line := range lines {
+		if strings.HasPrefix(line, "worktree ") {
+			path := strings.TrimPrefix(line, "worktree ")
+			name := filepath.Base(path)
+			worktrees = append(worktrees, map[string]string{
+				"jumpPoint": name,
+				"fullPath":  path,
+			})
+		}
+	}
+
+	return worktrees, nil
 }

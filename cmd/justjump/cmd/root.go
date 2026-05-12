@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 
 
@@ -17,6 +18,7 @@ import (
 
 var shellOutput string = ""
 var globalJump bool = false
+var workspacesJump bool = false
 
 var rootCmd = &cobra.Command{
 	Use:   "justjump",
@@ -28,6 +30,11 @@ The --global or -G flag can be used not only to perform jumps across projects, b
 	Args: cobra.ArbitraryArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		if shellOutput != "" {
+
+			if workspacesJump {
+				performWorkspaceJump(shellOutput, args)
+				return
+			}
 
 			if globalJump {
 				performGlobalJump(shellOutput, args)
@@ -57,10 +64,10 @@ func performGlobalJump(tmpFilePath string, args []string) {
 	targetPaths := allPaths
 
 	if len(args) > 0 {
-		searchTerm := args[0]
+		searchTerm := strings.ToLower(args[0])
 		var filtered []map[string]string
 		for _, p := range allPaths {
-			if util.FuzzyMatch(searchTerm, p["jumpRoot"]) {
+			if util.FuzzyMatch(searchTerm, strings.ToLower(p["jumpRoot"])) {
 				filtered = append(filtered, p)
 			}
 		}
@@ -140,10 +147,10 @@ func performLocalJump(tmpFilePath string, args []string) {
 		targetPaths := allPaths
 
 		if len(args) > 0 {
-			searchTerm := args[0]
+			searchTerm := strings.ToLower(args[0])
 			var filtered []map[string]string
 			for _, p := range allPaths {
-				if util.FuzzyMatch(searchTerm, p["jumpPoint"]) {
+				if util.FuzzyMatch(searchTerm, strings.ToLower(p["jumpPoint"])) {
 					filtered = append(filtered, p)
 				}
 			}
@@ -194,6 +201,69 @@ func performLocalJump(tmpFilePath string, args []string) {
 	}
 }
 
+func performWorkspaceJump(tmpFilePath string, args []string) {
+	allPaths, err := util.GetGitWorktrees()
+	if err != nil {
+		fmt.Printf("Workspaces error: %v\n", err)
+		os.Exit(1)
+	}
+
+	if len(allPaths) <= 1 {
+		fmt.Println("No other git workspaces (worktrees) found for this repository")
+		os.Exit(1)
+	}
+
+	targetPaths := allPaths
+
+	if len(args) > 0 {
+		searchTerm := strings.ToLower(args[0])
+		var filtered []map[string]string
+		for _, p := range allPaths {
+			if util.FuzzyMatch(searchTerm, strings.ToLower(p["jumpPoint"])) {
+				filtered = append(filtered, p)
+			}
+		}
+
+		if len(filtered) == 1 {
+			err = util.EchoCommand(tmpFilePath, filtered[0]["fullPath"])
+			if err != nil {
+				fmt.Printf("%v\n", err)
+				os.Exit(1)
+			}
+			return
+		}
+
+		if len(filtered) > 1 {
+			targetPaths = filtered
+		}
+	}
+
+	prompt := promtui_local.PromptSelector(targetPaths)
+	i, _, err := prompt.Run()
+	if err != nil {
+		if (err == promptui.ErrInterrupt || err == promptui.ErrEOF) && len(targetPaths) < len(allPaths) {
+			prompt = promtui_local.PromptSelector(allPaths)
+			i, _, err = prompt.Run()
+			if err != nil {
+				os.Exit(0)
+			}
+			err = util.EchoCommand(tmpFilePath, allPaths[i]["fullPath"])
+			if err != nil {
+				fmt.Printf("%v\n", err)
+				os.Exit(1)
+			}
+			return
+		}
+		os.Exit(0)
+	}
+
+	err = util.EchoCommand(tmpFilePath, targetPaths[i]["fullPath"])
+	if err != nil {
+		fmt.Printf("%v\n", err)
+		os.Exit(1)
+	}
+}
+
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
@@ -206,4 +276,5 @@ func init() {
 	rootCmd.PersistentFlags().MarkHidden("shelloutput")
 
 	rootCmd.PersistentFlags().BoolVarP(&globalJump, "global", "G", false, "Perform a global jump across registered projects or use as a modifier for other commands like add, verify, or remove")
+	rootCmd.PersistentFlags().BoolVarP(&workspacesJump, "workspaces", "W", false, "Discovery: List all other git workspaces from current folder")
 }
