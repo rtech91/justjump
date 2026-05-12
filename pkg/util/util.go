@@ -82,7 +82,41 @@ func EchoCommand(tmpFilePath string, chosenFullPath string) error {
 		return fmt.Errorf("failed to write to temporary file: %w", err)
 	}
 
+	// Save the CURRENT directory (source) as the last jump so we can toggle back
+	currentDir, err := os.Getwd()
+	if err == nil {
+		saveLastJump(currentDir)
+	}
+
 	return nil
+}
+
+func saveLastJump(path string) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return
+	}
+
+	configDir := filepath.Join(home, global.ConfigDirectory)
+	_ = os.MkdirAll(configDir, 0755)
+
+	lastJumpPath := filepath.Join(configDir, global.LastJumpFile)
+	_ = os.WriteFile(lastJumpPath, []byte(path), 0644)
+}
+
+func ReadLastJump() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+
+	lastJumpPath := filepath.Join(home, global.ConfigDirectory, global.LastJumpFile)
+	data, err := os.ReadFile(lastJumpPath)
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimSpace(string(data)), nil
 }
 
 // FuzzyMatch returns true if the characters in the search string

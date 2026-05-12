@@ -111,6 +111,13 @@ This is perfect for ecosystems where you have multiple branches checked out into
 #### 3. Smart Fallback
 If you are viewing a filtered list and realize you wanted something else, simply press **Escape**. Instead of exiting, JustJump will immediately switch to the **full list** of all available jump points.
 
+#### 4. Back Jump (`-`)
+Jump back to your previous successful destination across any terminal session.
+```sh
+jj -
+```
+Unlike `cd -`, this works across different terminal windows and persists even after you restart your computer.
+
 ### Add Command
 
 The `add` command allows you to register a directory as a jump root.
