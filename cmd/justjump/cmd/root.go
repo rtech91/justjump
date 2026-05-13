@@ -25,7 +25,7 @@ var rootCmd = &cobra.Command{
 To use it simply run 'jj' in your terminal and select the directory you want to jump to.
 
 The --global or -G flag can be used not only to perform jumps across projects, but also as a modifier for other commands like add, verify, or remove.`,
-	Args: cobra.ArbitraryArgs,
+	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		if shellOutput != "" {
 
