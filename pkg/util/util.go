@@ -1,9 +1,10 @@
 package util
 
 import (
-	"errors"
 	"fmt"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/rtech91/justjump/pkg/config/global"
@@ -69,16 +70,115 @@ func BuildJumpPointPaths(jumpRoot string, jumpPoints []string) []map[string]stri
 }
 
 func EchoCommand(tmpFilePath string, chosenFullPath string) error {
-	file, err := os.OpenFile(tmpFilePath, os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(tmpFilePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
-		return errors.New("failed to open the temporary file")
+		return fmt.Errorf("failed to open temporary file: %w", err)
 	}
+	defer file.Close()
 
 	// write the selected jump point with command
-	_, err = file.WriteString("cd " + chosenFullPath)
+	// We use %q to properly quote the path and -- to prevent flag injection
+	_, err = fmt.Fprintf(file, "cd -- %q\n", chosenFullPath)
 	if err != nil {
-		return errors.New("failed to write to the temporary file")
+		return fmt.Errorf("failed to write to temporary file: %w", err)
+	}
+
+	// Save the CURRENT directory (source) as the last jump so we can toggle back
+	currentDir, err := os.Getwd()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: could not get current directory: %v\n", err)
+		return nil
+	}
+
+	if err := saveLastJump(currentDir); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: could not save jump history: %v\n", err)
 	}
 
 	return nil
+}
+
+func saveLastJump(path string) error {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return fmt.Errorf("could not find home directory: %w", err)
+	}
+
+	configDir := filepath.Join(home, global.ConfigDirectory)
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		return fmt.Errorf("could not create config directory: %w", err)
+	}
+
+	lastJumpPath := filepath.Join(configDir, global.LastJumpFile)
+	if err := os.WriteFile(lastJumpPath, []byte(path), 0644); err != nil {
+		return fmt.Errorf("could not write last jump file: %w", err)
+	}
+
+	return nil
+}
+
+func ReadLastJump() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+
+	lastJumpPath := filepath.Join(home, global.ConfigDirectory, global.LastJumpFile)
+	data, err := os.ReadFile(lastJumpPath)
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimSpace(string(data)), nil
+}
+
+// FuzzyMatch returns true if the characters in the search string
+// appear in the target string in the same order.
+// Both search and target must be pre-lowercased for best performance.
+func FuzzyMatch(search, target string) bool {
+	if search == "" {
+		return true
+	}
+
+	searchIdx := 0
+	for targetIdx := 0; targetIdx < len(target); targetIdx++ {
+		if target[targetIdx] == search[searchIdx] {
+			searchIdx++
+		}
+		if searchIdx == len(search) {
+			return true
+		}
+	}
+
+	return false
+}
+
+
+// GetGitWorktrees runs 'git worktree list' and returns the paths of all associated worktrees.
+func GetGitWorktrees() ([]map[string]string, error) {
+	worktrees := make([]map[string]string, 0)
+
+	// Run git worktree list --porcelain
+	cmd := exec.Command("git", "worktree", "list", "--porcelain")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		details := strings.TrimSpace(string(output))
+		if details != "" {
+			return nil, fmt.Errorf("failed to list git worktrees: %w: %s", err, details)
+		}
+		return nil, fmt.Errorf("failed to list git worktrees: %w", err)
+	}
+
+	lines := strings.Split(string(output), "\n")
+	for _, line := range lines {
+		if strings.HasPrefix(line, "worktree ") {
+			path := strings.TrimPrefix(line, "worktree ")
+			name := filepath.Base(path)
+			worktrees = append(worktrees, map[string]string{
+				"jumpPoint": name,
+				"fullPath":  path,
+			})
+		}
+	}
+
+	return worktrees, nil
 }

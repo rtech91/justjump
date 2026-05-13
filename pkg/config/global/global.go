@@ -11,6 +11,7 @@ const (
 	ConfigDirectory = ".config/justjump"
 	JumpRootsDir    = "jumproots.d"
 	FileExtension   = ".jpath"
+	LastJumpFile    = "last_jump"
 )
 
 type Jumproot struct {
