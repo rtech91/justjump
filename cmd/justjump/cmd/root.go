@@ -32,7 +32,11 @@ The --global or -G flag can be used not only to perform jumps across projects, b
 			if len(args) == 1 && args[0] == "-" {
 				lastPath, err := util.ReadLastJump()
 				if err != nil {
-					fmt.Println("No previous jump found")
+					if os.IsNotExist(err) {
+						fmt.Println("No previous jump found")
+					} else {
+						fmt.Printf("Error reading jump history: %v\n", err)
+					}
 					os.Exit(1)
 				}
 

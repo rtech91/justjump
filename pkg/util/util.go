@@ -159,9 +159,13 @@ func GetGitWorktrees() ([]map[string]string, error) {
 
 	// Run git worktree list --porcelain
 	cmd := exec.Command("git", "worktree", "list", "--porcelain")
-	output, err := cmd.Output()
+	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("not a git repository or git not found")
+		details := strings.TrimSpace(string(output))
+		if details != "" {
+			return nil, fmt.Errorf("failed to list git worktrees: %w: %s", err, details)
+		}
+		return nil, fmt.Errorf("failed to list git worktrees: %w", err)
 	}
 
 	lines := strings.Split(string(output), "\n")
