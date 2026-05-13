@@ -85,24 +85,35 @@ func EchoCommand(tmpFilePath string, chosenFullPath string) error {
 
 	// Save the CURRENT directory (source) as the last jump so we can toggle back
 	currentDir, err := os.Getwd()
-	if err == nil {
-		saveLastJump(currentDir)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: could not get current directory: %v\n", err)
+		return nil
+	}
+
+	if err := saveLastJump(currentDir); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: could not save jump history: %v\n", err)
 	}
 
 	return nil
 }
 
-func saveLastJump(path string) {
+func saveLastJump(path string) error {
 	home, err := os.UserHomeDir()
 	if err != nil {
-		return
+		return fmt.Errorf("could not find home directory: %w", err)
 	}
 
 	configDir := filepath.Join(home, global.ConfigDirectory)
-	_ = os.MkdirAll(configDir, 0755)
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		return fmt.Errorf("could not create config directory: %w", err)
+	}
 
 	lastJumpPath := filepath.Join(configDir, global.LastJumpFile)
-	_ = os.WriteFile(lastJumpPath, []byte(path), 0644)
+	if err := os.WriteFile(lastJumpPath, []byte(path), 0644); err != nil {
+		return fmt.Errorf("could not write last jump file: %w", err)
+	}
+
+	return nil
 }
 
 func ReadLastJump() (string, error) {
