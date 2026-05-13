@@ -64,33 +64,20 @@ The --global or -G flag can be used not only to perform jumps across projects, b
 	},
 }
 
-func performGlobalJump(tmpFilePath string, args []string) {
-	globalConfig, err := global.New()
-	if err != nil {
-		fmt.Printf("%v\n", err)
-		os.Exit(1)
-	}
-
-	jumpRoots := globalConfig.JumpRoots()
-	if len(jumpRoots) == 0 {
-		fmt.Println("No jump roots found")
-		os.Exit(1)
-	}
-
-	allPaths := util.BuildJumpRootPaths(jumpRoots)
+func handleJumpSelection(tmpFilePath string, allPaths []map[string]string, args []string, searchKey string, label string, selector func([]map[string]string, string) *promptui.Select) {
 	targetPaths := allPaths
 
 	if len(args) > 0 {
 		searchTerm := strings.ToLower(args[0])
 		var filtered []map[string]string
 		for _, p := range allPaths {
-			if util.FuzzyMatch(searchTerm, strings.ToLower(p["jumpRoot"])) {
+			if util.FuzzyMatch(searchTerm, strings.ToLower(p[searchKey])) {
 				filtered = append(filtered, p)
 			}
 		}
 
 		if len(filtered) == 1 {
-			err = util.EchoCommand(tmpFilePath, filtered[0]["fullPath"])
+			err := util.EchoCommand(tmpFilePath, filtered[0]["fullPath"])
 			if err != nil {
 				fmt.Printf("%v\n", err)
 				os.Exit(1)
@@ -103,12 +90,11 @@ func performGlobalJump(tmpFilePath string, args []string) {
 		}
 	}
 
-	prompt := promptui_global.PromptSelector(targetPaths, "Select a jump root")
-
+	prompt := selector(targetPaths, label)
 	i, _, err := prompt.Run()
 	if err != nil {
 		if (err == promptui.ErrInterrupt || err == promptui.ErrEOF) && len(targetPaths) < len(allPaths) {
-			prompt = promptui_global.PromptSelector(allPaths, "Select a jump root")
+			prompt = selector(allPaths, label)
 			i, _, err = prompt.Run()
 			if err != nil {
 				os.Exit(0)
@@ -123,12 +109,28 @@ func performGlobalJump(tmpFilePath string, args []string) {
 		os.Exit(0)
 	}
 
-	// open tmpFilePath and write the selected jump root with command
 	err = util.EchoCommand(tmpFilePath, targetPaths[i]["fullPath"])
 	if err != nil {
 		fmt.Printf("%v\n", err)
 		os.Exit(1)
 	}
+}
+
+func performGlobalJump(tmpFilePath string, args []string) {
+	globalConfig, err := global.New()
+	if err != nil {
+		fmt.Printf("%v\n", err)
+		os.Exit(1)
+	}
+
+	jumpRoots := globalConfig.JumpRoots()
+	if len(jumpRoots) == 0 {
+		fmt.Println("No jump roots found")
+		os.Exit(1)
+	}
+
+	allPaths := util.BuildJumpRootPaths(jumpRoots)
+	handleJumpSelection(tmpFilePath, allPaths, args, "jumpRoot", "Select a jump root", promptui_global.PromptSelector)
 }
 
 func performLocalJump(tmpFilePath string, args []string) {
@@ -161,57 +163,7 @@ func performLocalJump(tmpFilePath string, args []string) {
 		}
 
 		allPaths := util.BuildJumpPointPaths(jumpRoot, jumpPoints)
-		targetPaths := allPaths
-
-		if len(args) > 0 {
-			searchTerm := strings.ToLower(args[0])
-			var filtered []map[string]string
-			for _, p := range allPaths {
-				if util.FuzzyMatch(searchTerm, strings.ToLower(p["jumpPoint"])) {
-					filtered = append(filtered, p)
-				}
-			}
-
-			if len(filtered) == 1 {
-				err = util.EchoCommand(tmpFilePath, filtered[0]["fullPath"])
-				if err != nil {
-					fmt.Printf("%v\n", err)
-					os.Exit(1)
-				}
-				return
-			}
-
-			if len(filtered) > 1 {
-				targetPaths = filtered
-			}
-		}
-
-		prompt := promtui_local.PromptSelector(targetPaths, "Select a jump point")
-
-		i, _, err := prompt.Run()
-		if err != nil {
-			if (err == promptui.ErrInterrupt || err == promptui.ErrEOF) && len(targetPaths) < len(allPaths) {
-				prompt = promtui_local.PromptSelector(allPaths, "Select a jump point")
-				i, _, err = prompt.Run()
-				if err != nil {
-					os.Exit(0)
-				}
-				err = util.EchoCommand(tmpFilePath, allPaths[i]["fullPath"])
-				if err != nil {
-					fmt.Printf("%v\n", err)
-					os.Exit(1)
-				}
-				return
-			}
-			os.Exit(0)
-		}
-
-		// open tmpFilePath and write the selected jump point with command
-		err = util.EchoCommand(tmpFilePath, targetPaths[i]["fullPath"])
-		if err != nil {
-			fmt.Printf("%v\n", err)
-			os.Exit(1)
-		}
+		handleJumpSelection(tmpFilePath, allPaths, args, "jumpPoint", "Select a jump point", promtui_local.PromptSelector)
 	} else {
 		fmt.Println("Can't determine jump root for current directory")
 		fmt.Println("Please run 'jj add -G' to add a global jump root.")
@@ -230,55 +182,7 @@ func performWorkspaceJump(tmpFilePath string, args []string) {
 		os.Exit(1)
 	}
 
-	targetPaths := allPaths
-
-	if len(args) > 0 {
-		searchTerm := strings.ToLower(args[0])
-		var filtered []map[string]string
-		for _, p := range allPaths {
-			if util.FuzzyMatch(searchTerm, strings.ToLower(p["jumpPoint"])) {
-				filtered = append(filtered, p)
-			}
-		}
-
-		if len(filtered) == 1 {
-			err = util.EchoCommand(tmpFilePath, filtered[0]["fullPath"])
-			if err != nil {
-				fmt.Printf("%v\n", err)
-				os.Exit(1)
-			}
-			return
-		}
-
-		if len(filtered) > 1 {
-			targetPaths = filtered
-		}
-	}
-
-	prompt := promtui_local.PromptSelector(targetPaths, "Select a workspace/worktree")
-	i, _, err := prompt.Run()
-	if err != nil {
-		if (err == promptui.ErrInterrupt || err == promptui.ErrEOF) && len(targetPaths) < len(allPaths) {
-			prompt = promtui_local.PromptSelector(allPaths, "Select a workspace/worktree")
-			i, _, err = prompt.Run()
-			if err != nil {
-				os.Exit(0)
-			}
-			err = util.EchoCommand(tmpFilePath, allPaths[i]["fullPath"])
-			if err != nil {
-				fmt.Printf("%v\n", err)
-				os.Exit(1)
-			}
-			return
-		}
-		os.Exit(0)
-	}
-
-	err = util.EchoCommand(tmpFilePath, targetPaths[i]["fullPath"])
-	if err != nil {
-		fmt.Printf("%v\n", err)
-		os.Exit(1)
-	}
+	handleJumpSelection(tmpFilePath, allPaths, args, "jumpPoint", "Select a workspace/worktree", promtui_local.PromptSelector)
 }
 
 func Execute() {
