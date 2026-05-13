@@ -5,8 +5,6 @@ import (
 	"os"
 	"strings"
 
-
-
 	"github.com/manifoldco/promptui"
 	"github.com/rtech91/justjump/pkg/config/global"
 	"github.com/rtech91/justjump/pkg/config/local"
