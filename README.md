@@ -9,8 +9,7 @@ JustJump is a simple tool to help you jump between directories quickly.
 - [Shell integration](#shell-integration)
 - [Usage](#usage)
 - [Configuration](#configuration)
-- [Contributing](#contributing)
-- [License](#license)
+- [DDEV Integration](#ddev-integration)
 
 ## Requirements
 
@@ -21,17 +20,21 @@ JustJump requires the following dependencies to be installed on your system:
 
 ## Installation
 
+### DDEV Integration
+If you are using DDEV, see [DDEV Integration instructions](./DDEV_INTEGRATION.md) for container setup.
+
 
 ### 1. Recommended: Install with the official script
+
 
 For most users, run this command (no need to download the source):
 
 ```bash
-curl -sSf https://raw.githubusercontent.com/rtech91/justjump/main/install.sh | bash
+curl -sSf https://rtech91.github.io/justjump/install.sh | bash
 ```
 
 This will:
-- Download and install JustJump to `/usr/local/bin`
+- Download and install JustJump to `~/.local/bin` (no sudo required)
 - Set up shell integration for Bash or Zsh automatically
 
 ---
@@ -44,13 +47,8 @@ If you have cloned or downloaded the source code, you can build and install manu
 make build-release
 make install
 ```
-This will build the binary and install it to `/usr/local/bin/`. You may need `sudo` for permissions.
 
-Alternatively, you can install JustJump directly using Go:
-
-```sh
-GOBIN=/usr/local/bin go install github.com/rtech91/justjump@latest
-```
+This will build the binary and install it to `~/.local/bin`. You do not need sudo for this location.
 
 To uninstall JustJump, run the following command:
 
@@ -91,6 +89,34 @@ jj
 You can also pass arguments to `justjump` or `jj`.
 - `--help`: Display help information
 - `--global` or `-G`: Perform a global jump across registered projects
+- `--workspaces` or `-W`: Discover nearby Git workspaces (worktrees)
+
+### Smart Navigation & Discovery
+
+JustJump includes several powerful features to speed up your navigation:
+
+#### 1. Fuzzy Search & Guessing
+You can pass a search pattern directly to `jj`. It uses **fuzzy matching** to find the best project.
+- **Immediate Jump**: If only one project matches your pattern (e.g., `jj -G some-project`), it will jump there instantly without showing a menu.
+- **Initial Filtering**: If multiple projects match, the menu will be pre-filtered to show only those options.
+- **Shorthand**: You can use initials (e.g., `jj -G sp` for `some-project`).
+
+#### 2. Workspace Discovery (`-W`)
+Quickly jump between different **Git Worktrees** of the same project.
+```sh
+jj -W
+```
+This is perfect for ecosystems where you have multiple branches checked out into different folders. It uses the same fuzzy matching as the standard jump.
+
+#### 3. Smart Fallback
+If you are viewing a filtered list and realize you wanted something else, simply press **Escape**. Instead of exiting, JustJump will immediately switch to the **full list** of all available jump points.
+
+#### 4. Back Jump (`-`)
+Jump back to your previous successful destination across any terminal session.
+```sh
+jj -
+```
+Unlike `cd -`, this works across different terminal windows and persists even after you restart your computer.
 
 ### Add Command
 
