@@ -103,12 +103,12 @@ func performGlobalJump(tmpFilePath string, args []string) {
 		}
 	}
 
-	prompt := promptui_global.PromptSelector(targetPaths)
+	prompt := promptui_global.PromptSelector(targetPaths, "Select a jump root")
 
 	i, _, err := prompt.Run()
 	if err != nil {
 		if (err == promptui.ErrInterrupt || err == promptui.ErrEOF) && len(targetPaths) < len(allPaths) {
-			prompt = promptui_global.PromptSelector(allPaths)
+			prompt = promptui_global.PromptSelector(allPaths, "Select a jump root")
 			i, _, err = prompt.Run()
 			if err != nil {
 				os.Exit(0)
@@ -186,12 +186,12 @@ func performLocalJump(tmpFilePath string, args []string) {
 			}
 		}
 
-		prompt := promtui_local.PromptSelector(targetPaths)
+		prompt := promtui_local.PromptSelector(targetPaths, "Select a jump point")
 
 		i, _, err := prompt.Run()
 		if err != nil {
 			if (err == promptui.ErrInterrupt || err == promptui.ErrEOF) && len(targetPaths) < len(allPaths) {
-				prompt = promtui_local.PromptSelector(allPaths)
+				prompt = promtui_local.PromptSelector(allPaths, "Select a jump point")
 				i, _, err = prompt.Run()
 				if err != nil {
 					os.Exit(0)
@@ -255,11 +255,11 @@ func performWorkspaceJump(tmpFilePath string, args []string) {
 		}
 	}
 
-	prompt := promtui_local.PromptSelector(targetPaths)
+	prompt := promtui_local.PromptSelector(targetPaths, "Select a workspace/worktree")
 	i, _, err := prompt.Run()
 	if err != nil {
 		if (err == promptui.ErrInterrupt || err == promptui.ErrEOF) && len(targetPaths) < len(allPaths) {
-			prompt = promtui_local.PromptSelector(allPaths)
+			prompt = promtui_local.PromptSelector(allPaths, "Select a workspace/worktree")
 			i, _, err = prompt.Run()
 			if err != nil {
 				os.Exit(0)

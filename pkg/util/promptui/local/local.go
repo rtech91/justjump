@@ -23,9 +23,12 @@ func promptTemplates() *promptui.SelectTemplates {
 	}
 }
 
-func PromptSelector(jumpPointPaths []map[string]string) *promptui.Select {
+func PromptSelector(jumpPointPaths []map[string]string, label string) *promptui.Select {
+	if label == "" {
+		label = "Select a jump point"
+	}
 	return &promptui.Select{
-		Label:     "Select a jump point",
+		Label:     label,
 		Items:     jumpPointPaths,
 		Templates: promptTemplates(),
 		Searcher: func(input string, index int) bool {
