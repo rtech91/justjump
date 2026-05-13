@@ -77,7 +77,8 @@ func EchoCommand(tmpFilePath string, chosenFullPath string) error {
 	defer file.Close()
 
 	// write the selected jump point with command
-	_, err = file.WriteString("cd " + chosenFullPath)
+	// We use %q to properly quote the path and -- to prevent flag injection
+	_, err = fmt.Fprintf(file, "cd -- %q\n", chosenFullPath)
 	if err != nil {
 		return fmt.Errorf("failed to write to temporary file: %w", err)
 	}
