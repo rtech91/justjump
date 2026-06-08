@@ -2,7 +2,9 @@ package local
 
 import (
 	"errors"
+	"io/fs"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -26,7 +28,7 @@ type LocalConfig interface {
 
 func IsLocalConfigPresent(jumproot string) bool {
 	localConfigPath := jumproot + "/" + LocalConfigFile
-	if _, err := os.Stat(localConfigPath); os.IsNotExist(err) {
+	if _, err := os.Stat(localConfigPath); errors.Is(err, fs.ErrNotExist) {
 		return false
 	}
 
@@ -134,23 +136,35 @@ func (c *localConfig) AddJumpPoint(rpath string) error {
 }
 
 func (c *localConfig) RemoveJumpPoint(path string) error {
-	if path[len(path)-1] != '/' {
-		path += "/"
+	// Normalize to absolute path
+	if !filepath.IsAbs(path) {
+		path = filepath.Join(c.jumpRoot, path)
 	}
+	path = filepath.Clean(path) + "/"
+
+	bestIndex := -1
+	bestMatchLen := -1
 
 	for i, relPath := range c.jumpPoints.Paths {
-		// Check if the relative path is a substring of the absolute path
-		if strings.Contains(path, relPath) {
-			c.jumpPoints.Paths = append(c.jumpPoints.Paths[:i], c.jumpPoints.Paths[i+1:]...)
+		absJumpPoint := filepath.Clean(filepath.Join(c.jumpRoot, relPath)) + "/"
 
-			// Save the updated configuration
-			err := c.Save()
-			if err != nil {
-				return err
+		if strings.HasPrefix(path, absJumpPoint) {
+			if len(absJumpPoint) > bestMatchLen {
+				bestMatchLen = len(absJumpPoint)
+				bestIndex = i
 			}
-
-			return nil
 		}
+	}
+
+	if bestIndex != -1 {
+		c.jumpPoints.Paths = append(c.jumpPoints.Paths[:bestIndex], c.jumpPoints.Paths[bestIndex+1:]...)
+
+		err := c.Save()
+		if err != nil {
+			return err
+		}
+
+		return nil
 	}
 
 	return ErrRelPathNotExist
@@ -158,7 +172,7 @@ func (c *localConfig) RemoveJumpPoint(path string) error {
 
 func (c *localConfig) CheckLocalPathExist(rpath string) error {
 	rpathstat, err := os.Stat(c.jumpRoot + "/" + rpath)
-	if os.IsNotExist(err) || !rpathstat.IsDir() {
+	if err != nil || !rpathstat.IsDir() {
 		return ErrRelPathNotExist
 	}
 
