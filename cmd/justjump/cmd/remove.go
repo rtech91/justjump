@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/rtech91/justjump/pkg/config/global"
 	"github.com/rtech91/justjump/pkg/config/local"
@@ -40,7 +41,9 @@ func handleRemoveGlobal(currentDir string) {
 
 	var targetName string
 	for name, jumproot := range globalConfig.JumpRoots() {
-		if filepath.HasPrefix(currentDir, jumproot.Root) {
+		cleanedCurrent := filepath.Clean(currentDir)
+		cleanedRoot := filepath.Clean(jumproot.Root)
+		if strings.HasPrefix(cleanedCurrent, cleanedRoot) {
 			targetName = name
 			break
 		}
