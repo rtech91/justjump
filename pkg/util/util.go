@@ -13,16 +13,21 @@ import (
 )
 
 func DetermineJumpRoot(currentDir string, jumpRoots global.JumpRoots) (bool, string) {
-	var exist bool = false
-	var jumpRoot string = ""
+	cleanCurrentDir := filepath.Clean(currentDir)
+
 	for _, jr := range jumpRoots {
-		if strings.HasPrefix(currentDir, jr.Root) {
-			exist = true
-			jumpRoot = jr.Root
-			break
+		cleanJumpRoot := filepath.Clean(jr.Root)
+		if cleanJumpRoot == cleanCurrentDir {
+			return true, cleanJumpRoot
+		}
+
+		prefix := cleanJumpRoot + string(os.PathSeparator)
+		if strings.HasPrefix(cleanCurrentDir, prefix) {
+			return true, cleanJumpRoot
 		}
 	}
-	return exist, jumpRoot
+
+	return false, ""
 }
 
 func BuildJumpRootPaths(jumpRoots global.JumpRoots) []map[string]string {

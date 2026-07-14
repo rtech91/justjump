@@ -17,6 +17,7 @@ import (
 var shellOutput string = ""
 var globalJump bool = false
 var workspacesJump bool = false
+var rootJump bool = false
 
 var rootCmd = &cobra.Command{
 	Use:   "justjump",
@@ -28,6 +29,10 @@ The --global or -G flag can be used not only to perform jumps across projects, b
 	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		if shellOutput != "" {
+			if rootJump {
+				performRootJump(shellOutput)
+				return
+			}
 
 			if len(args) == 1 && args[0] == "-" {
 				lastPath, err := util.ReadLastJump()
@@ -133,6 +138,33 @@ func performGlobalJump(tmpFilePath string, args []string) {
 	handleJumpSelection(tmpFilePath, allPaths, args, "jumpRoot", "Select a jump root", promptui_global.PromptSelector)
 }
 
+func performRootJump(tmpFilePath string) {
+	globalConfig, err := global.New()
+	if err != nil {
+		fmt.Printf("%v\n", err)
+		os.Exit(1)
+	}
+
+	currentDir, err := os.Getwd()
+	if err != nil {
+		fmt.Printf("%v\n", err)
+		os.Exit(1)
+	}
+
+	jumpRoots := globalConfig.JumpRoots()
+	jumpRootExists, jumpRoot := util.DetermineJumpRoot(currentDir, jumpRoots)
+	if !jumpRootExists {
+		fmt.Println("Can't determine jump root for current directory")
+		fmt.Println("Please run 'jj add -G' to add a global jump root.")
+		os.Exit(1)
+	}
+
+	if err := util.EchoCommand(tmpFilePath, jumpRoot); err != nil {
+		fmt.Printf("%v\n", err)
+		os.Exit(1)
+	}
+}
+
 func performLocalJump(tmpFilePath string, args []string) {
 	globalConfig, err := global.New()
 	if err != nil {
@@ -198,4 +230,5 @@ func init() {
 
 	rootCmd.PersistentFlags().BoolVarP(&globalJump, "global", "G", false, "Perform a global jump across registered projects or use as a modifier for other commands like add, verify, or remove")
 	rootCmd.PersistentFlags().BoolVarP(&workspacesJump, "workspaces", "W", false, "Discovery: List all other git workspaces from current folder")
+	rootCmd.PersistentFlags().BoolVarP(&rootJump, "root", "R", false, "Jump directly to the current project's global jump root")
 }
