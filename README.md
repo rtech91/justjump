@@ -156,21 +156,24 @@ jj remove -G
 
 ### Verify Command
 
-The `verify` command checks if the local or global folders exist.
+The `verify` command checks whether registered jump roots (global) or jump points (local) still exist on disk. Non-existent entries are reported, and you can optionally clean them up.
 
-To verify local folders, run:
+To verify local folders:
 ```sh
 jj verify
 ```
 
-To verify global folders, run:
-```sh
-jj verify --global
-```
-
-or 
+To verify global folders:
 ```sh
 jj verify -G
+```
+
+When run in an interactive terminal, you will be **prompted to remove** each invalid entry individually.
+
+To remove all invalid entries automatically without prompting, use the `--clean` / `-c` flag:
+```sh
+jj verify --clean
+jj verify -G -c
 ```
 
 ## Configuration
