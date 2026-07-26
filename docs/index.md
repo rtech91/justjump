@@ -8,9 +8,12 @@ A minimal, blazing-fast directory jumper for your shell. Effortlessly jump betwe
 
 ## Features
 
-- Fast directory jumping with **Fuzzy Search**
+- Fast directory jumping with **Fuzzy Search & Guessing**
+- **Global & Local Jump Roots** (`-G`) across your registered projects
+- **Project Root Jump** (`-R`) to jump directly to the current project's global jump root
 - **Git Workspace Discovery** (`-W`) for worktree navigation
-- **Back Jump** (`-`) for instant toggle between locations
+- **Persistent Back Jump** (`-`) for instant toggle between locations across terminal sessions
+- **Management Commands**: `add`, `remove`, and `verify` (with auto-clean support)
 - Shell integration for Bash and Zsh
 - Zero-dependency, blazing-fast performance
 
@@ -19,8 +22,10 @@ A minimal, blazing-fast directory jumper for your shell. Effortlessly jump betwe
 JustJump is more than just a `cd` list. It understands your workflow:
 
 - **Fuzzy Guessing**: Type `jj project` to jump directly to your `some-project` directory. If it's a unique match, you jump instantly.
+- **Project Root Jump**: Use `jj -R` from any subfolder inside a registered global jump root to return instantly to that root.
 - **Git Worktrees**: Use `jj -W` to discover and jump between different branches/worktrees of the same repository.
 - **Persistent Back Jump**: Use `jj -` to toggle back to your previous location across any terminal window.
+- **Smart Fallback**: Pressing **Escape** while viewing a filtered list resets to the full list of available jump points instead of exiting.
 
 ## Installation
 
@@ -51,16 +56,50 @@ After installation, reload your shell:
 source ~/.bashrc   # or source ~/.zshrc
 ```
 
-To jump to a directory:
+### Basic Navigation
 
-```bash
-jj
-```
+- **Interactive Local Jump**:
+  ```bash
+  jj
+  ```
+- **Global Jump**:
+  ```bash
+  jj -G
+  ```
+- **Project Root Jump**:
+  ```bash
+  jj -R
+  ```
+- **Git Workspace Jump**:
+  ```bash
+  jj -W
+  ```
+- **Back Jump**:
+  ```bash
+  jj -
+  ```
+- **Fuzzy Search Jump**:
+  ```bash
+  jj -G myproject
+  ```
 
-or
+### Managing Jump Roots & Points
 
-```bash
-jj -G
-```
+- **Add Jump Root**:
+  ```bash
+  jj add         # Add local jump root
+  jj add -G      # Add global jump root
+  ```
+- **Remove Jump Root**:
+  ```bash
+  jj remove      # Remove local jump root
+  jj remove -G   # Remove global jump root
+  ```
+- **Verify & Clean Stale Roots**:
+  ```bash
+  jj verify           # Interactively verify local jump points
+  jj verify -G        # Interactively verify global jump roots
+  jj verify -G -c     # Clean non-existent global jump roots automatically
+  ```
 
 For more details, see the [README](https://github.com/rtech91/justjump).
