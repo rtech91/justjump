@@ -1,7 +1,9 @@
 package global
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -38,7 +40,7 @@ func IsGlobalConfigPresent() bool {
 
 	configPath := filepath.Join(home, ConfigDirectory, JumpRootsDir)
 	_, err = os.Stat(configPath)
-	return !os.IsNotExist(err)
+	return !errors.Is(err, fs.ErrNotExist)
 }
 
 type globalConfig struct {
