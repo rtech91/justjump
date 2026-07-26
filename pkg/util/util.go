@@ -1,7 +1,9 @@
 package util
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -11,16 +13,21 @@ import (
 )
 
 func DetermineJumpRoot(currentDir string, jumpRoots global.JumpRoots) (bool, string) {
-	var exist bool = false
-	var jumpRoot string = ""
+	cleanCurrentDir := filepath.Clean(currentDir)
+
 	for _, jr := range jumpRoots {
-		if strings.HasPrefix(currentDir, jr.Root) {
-			exist = true
-			jumpRoot = jr.Root
-			break
+		cleanJumpRoot := filepath.Clean(jr.Root)
+		if cleanJumpRoot == cleanCurrentDir {
+			return true, cleanJumpRoot
+		}
+
+		prefix := cleanJumpRoot + string(os.PathSeparator)
+		if strings.HasPrefix(cleanCurrentDir, prefix) {
+			return true, cleanJumpRoot
 		}
 	}
-	return exist, jumpRoot
+
+	return false, ""
 }
 
 func BuildJumpRootPaths(jumpRoots global.JumpRoots) []map[string]string {
@@ -28,7 +35,7 @@ func BuildJumpRootPaths(jumpRoots global.JumpRoots) []map[string]string {
 
 	for name, jr := range jumpRoots {
 
-		if _, err := os.Stat(jr.Root); os.IsNotExist(err) {
+		if _, err := os.Stat(jr.Root); errors.Is(err, fs.ErrNotExist) {
 			fmt.Printf("Can't add jump root to the list %s as it does not exist\n", jr.Root)
 			continue
 		}
@@ -53,7 +60,7 @@ func BuildJumpPointPaths(jumpRoot string, jumpPoints []string) []map[string]stri
 	for _, jumpPoint := range jumpPoints {
 		var fullPath string = jumpRoot + "/" + jumpPoint
 
-		if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+		if _, err := os.Stat(fullPath); errors.Is(err, fs.ErrNotExist) {
 			fmt.Printf("Can't add jump point to the list %s as it does not exist\n", fullPath)
 			continue
 		}

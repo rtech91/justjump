@@ -89,6 +89,7 @@ jj
 You can also pass arguments to `justjump` or `jj`.
 - `--help`: Display help information
 - `--global` or `-G`: Perform a global jump across registered projects
+- `--root` or `-R`: Jump directly to the current project's global jump root when you are inside it
 - `--workspaces` or `-W`: Discover nearby Git workspaces (worktrees)
 
 ### Smart Navigation & Discovery
@@ -117,6 +118,13 @@ Jump back to your previous successful destination across any terminal session.
 jj -
 ```
 Unlike `cd -`, this works across different terminal windows and persists even after you restart your computer.
+
+#### 5. Jump to the Current Project Root (`-R`)
+If you are already inside a subfolder of a registered global jump root, you can jump straight to that root without opening a selection menu.
+```sh
+jj -R
+```
+This is useful when you want a fast return to the project root while working in a nested folder.
 
 ### Add Command
 
@@ -156,21 +164,24 @@ jj remove -G
 
 ### Verify Command
 
-The `verify` command checks if the local or global folders exist.
+The `verify` command checks whether registered jump roots (global) or jump points (local) still exist on disk. Non-existent entries are reported, and you can optionally clean them up.
 
-To verify local folders, run:
+To verify local folders:
 ```sh
 jj verify
 ```
 
-To verify global folders, run:
-```sh
-jj verify --global
-```
-
-or 
+To verify global folders:
 ```sh
 jj verify -G
+```
+
+When run in an interactive terminal, you will be **prompted to remove** each invalid entry individually.
+
+To remove all invalid entries automatically without prompting, use the `--clean` / `-c` flag:
+```sh
+jj verify --clean
+jj verify -G -c
 ```
 
 ## Configuration
@@ -185,6 +196,8 @@ The global jump root registry is managed as a drop-in directory located at:
 ```
 
 Each global jump root is represented as a file with the `.jpath` extension. The file name corresponds to the jump root name, and the file content contains the absolute path to the directory.
+
+Once a global jump root has been registered, you can use `jj -R` from any subdirectory inside that root to jump directly back to the root path.
 
 To manually add a global jump root, create a file in the `jumproots.d` directory:
 ```sh
