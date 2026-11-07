@@ -159,11 +159,8 @@ func FuzzyMatch(search, target string) bool {
 	return false
 }
 
-
 // GetGitWorktrees runs 'git worktree list' and returns the paths of all associated worktrees.
 func GetGitWorktrees() ([]map[string]string, error) {
-	worktrees := make([]map[string]string, 0)
-
 	// Run git worktree list --porcelain
 	cmd := exec.Command("git", "worktree", "list", "--porcelain")
 	output, err := cmd.CombinedOutput()
@@ -175,17 +172,40 @@ func GetGitWorktrees() ([]map[string]string, error) {
 		return nil, fmt.Errorf("failed to list git worktrees: %w", err)
 	}
 
-	lines := strings.Split(string(output), "\n")
+	return parseGitWorktrees(string(output)), nil
+}
+
+func parseGitWorktrees(output string) []map[string]string {
+	worktrees := make([]map[string]string, 0)
+	lines := strings.Split(output, "\n")
+	var path string
+	var prunable bool
+	hasRecord := false
+
+	appendRecord := func() {
+		if !hasRecord || prunable {
+			return
+		}
+		worktrees = append(worktrees, map[string]string{
+			"jumpPoint": filepath.Base(path),
+			"fullPath":  path,
+		})
+	}
+
 	for _, line := range lines {
 		if strings.HasPrefix(line, "worktree ") {
-			path := strings.TrimPrefix(line, "worktree ")
-			name := filepath.Base(path)
-			worktrees = append(worktrees, map[string]string{
-				"jumpPoint": name,
-				"fullPath":  path,
-			})
+			appendRecord()
+			path = strings.TrimPrefix(line, "worktree ")
+			hasRecord = true
+			prunable = false
+		} else if hasRecord {
+			fields := strings.Fields(line)
+			if len(fields) > 0 && fields[0] == "prunable" {
+				prunable = true
+			}
 		}
 	}
 
-	return worktrees, nil
+	appendRecord()
+	return worktrees
 }

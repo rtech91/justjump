@@ -18,6 +18,11 @@ JustJump requires the following dependencies to be installed on your system:
 - [Git](https://git-scm.com/downloads) (optional)
 - [Make](https://www.gnu.org/software/make/)
 
+For filtering prunable worktrees from workspace discovery (`jj -W`), Git 2.31
+or later is recommended. Earlier Git versions do not emit prunable status in
+`git worktree list --porcelain` output, so prunable worktrees may still appear.
+This is a recommendation, not an enforced minimum Git version.
+
 ## Installation
 
 ### DDEV Integration
